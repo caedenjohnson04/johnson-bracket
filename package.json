@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@vercel/kv": "^2.0.0"
+    "@upstash/redis": "^1.34.3"
   },
   "devDependencies": {
     "puppeteer": "^24.39.1",
