@@ -299,6 +299,7 @@ let currentTab  = 'bracket';
 let pinState    = { userId:null, buffer:'' };
 let pending     = {};
 let syncStatus  = 'loading';
+let syncDetail  = '';
 
 // ══════════════════════════════════════════════════════════
 // DOG BRACKETS (seeded deterministic — always same picks)
@@ -340,14 +341,17 @@ async function fetchData() {
     const r = await fetch('/api/state');
     if (r.ok) {
       const data = await r.json();
-      if (data) { appData = data; syncStatus = 'ok'; return; }
-      syncStatus = 'ok'; // null means empty state, still connected
+      if (data) { appData = data; }
+      syncStatus = 'ok'; syncDetail = '';
     } else {
+      const txt = await r.text().catch(() => '');
       syncStatus = 'error';
-      console.warn('fetchData HTTP error', r.status);
+      syncDetail = `${r.status}: ${txt.slice(0,80)}`;
+      console.warn('fetchData failed', r.status, txt);
     }
   } catch(e) {
     syncStatus = 'error';
+    syncDetail = e.message;
     console.warn('fetch failed', e);
   }
   if (!appData) appData = defaultData();
@@ -499,7 +503,7 @@ function renderApp() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <button data-action="logout" class="btn-logout">Sign Out</button>
-        <div class="sync-status"><div class="sync-dot ${syncStatus}"></div>${syncStatus==='ok'?'Synced':syncStatus==='error'?'Sync error':'Connecting…'}</div>
+        <div class="sync-status"><div class="sync-dot ${syncStatus}"></div>${syncStatus==='ok'?'Synced':syncStatus==='error'?`Error: ${syncDetail}`:'Connecting…'}</div>
       </div>
     </div>
     <div class="tab-bar">
