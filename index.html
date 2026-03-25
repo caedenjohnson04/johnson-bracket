@@ -292,7 +292,6 @@ let currentUser = null;
 let currentTab  = 'bracket';
 let pinState    = { userId:null, buffer:'' };
 let pending     = {};
-const STORAGE_KEY = 'johnson_bracket_2026_v1';
 
 // ══════════════════════════════════════════════════════════
 // DOG BRACKETS (seeded deterministic — always same picks)
@@ -329,17 +328,26 @@ function defaultData() {
   };
 }
 
-function fetchData() {
+async function fetchData() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) { appData = JSON.parse(raw); return; }
-  } catch {}
+    const r = await fetch('/api/state');
+    if (r.ok) {
+      const data = await r.json();
+      if (data) { appData = data; return; }
+    }
+  } catch(e) { console.warn('fetch failed', e); }
   if (!appData) appData = defaultData();
 }
 
-function pushData(d) {
+async function pushData(d) {
   appData = d;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) { console.warn('save failed', e); }
+  try {
+    await fetch('/api/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(d)
+    });
+  } catch(e) { console.warn('push failed', e); }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -753,7 +761,7 @@ function checkPin() {
 // ══════════════════════════════════════════════════════════
 // ACTIONS
 // ══════════════════════════════════════════════════════════
-function doSubmitRound() {
+async function doSubmitRound() {
   const round  = activeRound();
   const merged = { ...(appData?.picks?.[currentUser]?.[round]||{}), ...(pending[round]||{}) };
   const d = JSON.parse(JSON.stringify(appData));
@@ -761,28 +769,28 @@ function doSubmitRound() {
   if (!d.submitted[currentUser]) d.submitted[currentUser] = {};
   d.picks[currentUser][round]    = merged;
   d.submitted[currentUser][round]= true;
-  pushData(d);
+  await pushData(d);
   pending[round] = {};
   render();
   toast(`${ROUND_LABELS[round]} picks locked! 🔒`);
 }
 
-function doSaveResults(round) {
+async function doSaveResults(round) {
   const d = JSON.parse(JSON.stringify(appData));
   document.querySelectorAll(`[data-result-round="${round}"]`).forEach(sel => {
     const gid = sel.dataset.resultGame;
     if (sel.value) d.results[round][gid] = sel.value;
     else delete d.results[round][gid];
   });
-  pushData(d);
+  await pushData(d);
   render();
   toast(`${ROUND_LABELS[round]} results saved!`);
 }
 
-function doSaveRounds() {
+async function doSaveRounds() {
   const d = JSON.parse(JSON.stringify(appData));
   document.querySelectorAll('[data-toggle]').forEach(t => { d.roundOpen[t.dataset.toggle] = t.checked; });
-  pushData(d);
+  await pushData(d);
   render();
   toast('Round settings saved!');
 }
@@ -832,10 +840,10 @@ document.addEventListener('click', e => {
         .then(()=>toast('State copied!')).catch(()=>toast('Copy failed'));
       break;
     case 'import':
-      navigator.clipboard.readText().then(txt => {
+      navigator.clipboard.readText().then(async txt => {
         try {
           const d = JSON.parse(txt);
-          if (d.results && d.picks) { pushData(d); render(); toast('State imported!'); }
+          if (d.results && d.picks) { await pushData(d); render(); toast('State imported!'); }
           else toast('Invalid data');
         } catch { toast('Could not parse clipboard'); }
       }).catch(()=>toast('Clipboard read failed'));
@@ -867,8 +875,8 @@ function toast(msg) {
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
-fetchData();
-render();
+fetchData().then(() => render());
+setInterval(async () => { await fetchData(); render(); }, 8000);
 </script>
 </body>
 </html>
