@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Johnson Family March Madness 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #1d7a45; --green-dark: #145732; --green-light: #e8f5ee;
+      --gold: #c8920c; --gold-light: #fef3d0;
+      --bg: #f0f4f9; --card: #ffffff;
+      --text: #1a2332; --text-mid: #374151; --text-muted: #6b7280;
+      --border: #e5e9f0;
+      --correct: #15803d; --wrong: #dc2626; --pending: #94a3b8;
+      --dog-bg: #f5f0ff; --dog-border: #c4b5fd;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
+      --r: 12px; --r-sm: 8px;
+    }
+    html { font-size: 16px; }
+    body { font-family:'Poppins',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; -webkit-font-smoothing:antialiased; }
+    button { cursor:pointer; border:none; background:none; font-family:inherit; }
+    select { font-family:inherit; }
+
+    /* ── LOGIN ── */
+    .login-screen { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:36px 20px 28px; background:linear-gradient(160deg,#edf7f2 0%,#edf2fb 55%,#fdf4e8 100%); }
+    .login-logo { font-size:60px; line-height:1; margin-bottom:10px; animation:bob 2.4s ease-in-out infinite; }
+    @keyframes bob { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-10px) rotate(5deg)} }
+    .login-title    { font-family:'Oswald',sans-serif; font-size:2.4rem; color:var(--green-dark); line-height:1; }
+    .login-subtitle { font-family:'Oswald',sans-serif; font-size:1.6rem; color:var(--gold); line-height:1.2; }
+    .login-desc     { font-size:.78rem; color:var(--text-muted); margin-top:6px; text-transform:uppercase; letter-spacing:.08em; }
+    .login-header   { text-align:center; margin-bottom:28px; }
+
+    .profile-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%; max-width:380px; margin-bottom:24px; }
+    .profile-card { background:var(--card); border-radius:var(--r); padding:18px 10px 14px; display:flex; flex-direction:column; align-items:center; gap:5px; box-shadow:var(--shadow-sm); border:2px solid transparent; transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s ease,border-color .18s ease; }
+    .profile-card:hover  { transform:translateY(-4px); box-shadow:var(--shadow-md); border-color:var(--green); }
+    .profile-card:active { transform:translateY(-1px); }
+    .profile-avatar { font-size:30px; line-height:1; }
+    .profile-name   { font-family:'Oswald',sans-serif; font-size:1rem; color:var(--text); }
+    .profile-role   { font-size:.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+
+    /* ── PIN SHEET ── */
+    .pin-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:flex-end; justify-content:center; z-index:1000; backdrop-filter:blur(5px); }
+    .pin-overlay.hidden { display:none; }
+    .pin-sheet { background:var(--card); border-radius:24px 24px 0 0; padding:28px 24px 44px; width:100%; max-width:400px; display:flex; flex-direction:column; align-items:center; gap:14px; animation:slideUp .32s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes slideUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    .pin-avatar { font-size:44px; }
+    .pin-name   { font-family:'Oswald',sans-serif; font-size:1.6rem; color:var(--text); }
+    .pin-dots   { display:flex; gap:14px; }
+    .pin-dots span { width:14px; height:14px; border-radius:50%; border:2px solid var(--border); background:transparent; transition:background .12s,border-color .12s; }
+    .pin-dots span.filled { background:var(--green); border-color:var(--green); }
+    .pin-error { color:var(--wrong); font-size:.8rem; font-weight:500; min-height:20px; }
+    .pin-pad   { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%; max-width:280px; }
+    .pin-key   { background:var(--bg); border-radius:var(--r-sm); height:62px; font-size:1.3rem; font-weight:500; color:var(--text); transition:background .1s,transform .1s; }
+    .pin-key:hover   { background:#e2e8f0; }
+    .pin-key:active  { transform:scale(.94); background:var(--green-light); }
+    .pin-key-blank   { pointer-events:none; background:transparent; }
+    .btn-pin-cancel  { font-size:.85rem; color:var(--text-muted); padding:8px 16px; }
+    .btn-pin-cancel:hover { color:var(--text); }
+
+    /* ── SPONSORS ── */
+    .sponsors-section { margin-top:auto; padding-top:20px; text-align:center; width:100%; max-width:400px; }
+    .sponsors-label   { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text-muted); margin-bottom:10px; }
+    .sponsors-row     { display:flex; gap:12px; justify-content:center; align-items:stretch; }
+    .sponsor-card     { border-radius:var(--r-sm); overflow:hidden; box-shadow:var(--shadow-sm); flex:1; max-width:160px; }
+    .sponsor-fert     { background:#fff; border:2px solid #2c6e2c; padding:8px 12px; display:flex; flex-direction:column; align-items:center; gap:3px; }
+    .fert-name        { font-family:Georgia,serif; font-weight:700; font-size:1.05rem; color:#2c6e2c; line-height:1; }
+    .fert-sub         { background:#2c6e2c; color:#fff; font-size:.52rem; font-weight:700; letter-spacing:.08em; padding:3px 6px; text-align:center; width:100%; }
+    .sponsor-glenns   { background:#fff; border:2px solid #e0e0e0; padding:6px 10px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+    .glenns-check     { display:flex; width:100%; height:12px; margin-bottom:1px; }
+    .check-sq         { flex:1; }
+    .check-sq.teal    { background:#00a99d; }
+    .check-sq.white   { background:#fff; border:1px solid #ddd; }
+    .glenns-name      { font-family:Georgia,serif; font-weight:900; font-size:1.1rem; color:#00a99d; line-height:1; font-style:italic; }
+    .glenns-sub       { background:#e02020; color:#fff; font-size:.5rem; font-weight:700; letter-spacing:.05em; padding:2px 5px; width:100%; text-align:center; }
+
+    /* ── APP SHELL ── */
+    .app-screen  { min-height:100vh; display:flex; flex-direction:column; }
+    .app-header  { background:linear-gradient(135deg,var(--green-dark) 0%,var(--green) 100%); padding:14px 20px 12px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; box-shadow:0 2px 14px rgba(21,87,50,.3); }
+    .app-header-info h2 { font-family:'Oswald',sans-serif; font-size:.68rem; color:rgba(255,255,255,.6); letter-spacing:.12em; text-transform:uppercase; }
+    .app-header-info h1 { font-family:'Oswald',sans-serif; font-size:1.35rem; color:#fff; line-height:1; }
+    .btn-logout  { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:6px 14px; color:#fff; font-size:.78rem; transition:background .15s; }
+    .btn-logout:hover { background:rgba(255,255,255,.25); }
+
+    .tab-bar  { background:var(--card); display:flex; border-bottom:2px solid var(--border); overflow-x:auto; scrollbar-width:none; }
+    .tab-bar::-webkit-scrollbar { display:none; }
+    .tab-btn  { flex:1; min-width:80px; padding:12px 6px; font-size:.74rem; font-weight:500; color:var(--text-muted); border-bottom:3px solid transparent; transition:color .15s,border-color .15s; white-space:nowrap; }
+    .tab-btn.active       { color:var(--green); border-bottom-color:var(--green); }
+    .tab-btn:hover:not(.active) { color:var(--text); }
+
+    .app-content { flex:1; padding:16px; max-width:620px; width:100%; margin:0 auto; }
+
+    /* ── BRACKET TAB ── */
+    .round-banner      { background:linear-gradient(135deg,var(--gold-light),#fff); border:1px solid #e0c070; border-radius:var(--r); padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .round-badge       { background:var(--gold); color:#fff; font-family:'Oswald',sans-serif; font-size:.72rem; font-weight:600; padding:3px 10px; border-radius:20px; letter-spacing:.05em; white-space:nowrap; }
+    .round-banner-text { font-size:.85rem; color:var(--text-mid); flex:1; }
+    .round-done-pill   { background:var(--green); color:#fff; font-size:.68rem; padding:2px 9px; border-radius:20px; white-space:nowrap; }
+
+    .region-label { font-family:'Oswald',sans-serif; font-size:.68rem; text-transform:uppercase; letter-spacing:.12em; color:var(--text-muted); margin:16px 0 8px; display:flex; align-items:center; gap:8px; }
+    .region-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .game-card    { background:var(--card); border-radius:var(--r); padding:14px; margin-bottom:10px; box-shadow:var(--shadow-sm); }
+    .game-meta    { display:flex; justify-content:space-between; font-size:.68rem; color:var(--text-muted); margin-bottom:10px; }
+    .teams-row    { display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center; }
+    .vs-lbl       { font-size:.72rem; font-weight:600; color:var(--text-muted); }
+    .game-result-row { font-size:.68rem; color:var(--text-muted); text-align:center; margin-top:7px; }
+    .game-result-row strong { color:var(--text-mid); }
+
+    .team-btn { border-radius:var(--r-sm); padding:10px 8px; text-align:center; border:2px solid var(--border); background:var(--bg); transition:all .15s ease; width:100%; }
+    .team-btn:not(:disabled):hover  { border-color:var(--green); background:var(--green-light); }
+    .team-btn:not(:disabled):active { transform:scale(.98); }
+    .team-btn.selected      { border-color:var(--green); background:var(--green-light); box-shadow:0 0 0 3px rgba(29,122,69,.12); }
+    .team-btn.correct-pick  { border-color:var(--correct); background:#dcfce7; }
+    .team-btn.wrong-pick    { border-color:var(--wrong); background:#fee2e2; opacity:.75; }
+    .team-btn.winner        { border-color:var(--correct); background:#dcfce7; }
+    .team-btn.loser         { opacity:.45; }
+    .team-btn:disabled      { cursor:default; }
+    .team-seed  { font-size:.62rem; color:var(--text-muted); font-weight:600; margin-bottom:1px; }
+    .team-name  { font-family:'Oswald',sans-serif; font-size:.9rem; color:var(--text); line-height:1.2; }
+
+    .submit-wrap  { padding:16px 0 4px; text-align:center; }
+    .btn-submit   { background:linear-gradient(135deg,var(--green),var(--green-dark)); color:#fff; border-radius:30px; padding:14px 36px; font-size:.95rem; font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:.05em; box-shadow:0 4px 16px rgba(29,122,69,.35); transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s; width:100%; max-width:280px; }
+    .btn-submit:not(:disabled):hover  { transform:translateY(-2px); box-shadow:0 6px 22px rgba(29,122,69,.45); }
+    .btn-submit:not(:disabled):active { transform:translateY(0); }
+    .btn-submit:disabled { opacity:.45; cursor:not-allowed; }
+    .picks-hint  { font-size:.75rem; color:var(--text-muted); margin-top:8px; }
+    .locked-note { background:#f8fafc; border:1px dashed var(--border); border-radius:var(--r-sm); padding:10px 14px; text-align:center; font-size:.78rem; color:var(--text-muted); margin-top:10px; }
+    .round-waiting      { text-align:center; padding:36px 16px; }
+    .round-waiting .big { font-size:48px; margin-bottom:12px; }
+    .round-waiting h3   { font-family:'Oswald',sans-serif; font-size:1.3rem; margin-bottom:8px; }
+    .round-waiting p    { font-size:.85rem; color:var(--text-muted); }
+
+    /* ── LEADERBOARD ── */
+    .lb-card  { background:var(--card); border-radius:var(--r); padding:16px; margin-bottom:10px; box-shadow:var(--shadow-sm); border:2px solid transparent; }
+    .lb-card.top    { border-color:var(--gold); background:linear-gradient(135deg,#fffcf0,#fff); }
+    .lb-card.dog-card { border-color:var(--dog-border); background:linear-gradient(135deg,var(--dog-bg),#fff); }
+    .lb-top   { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+    .lb-rank  { font-family:'Oswald',sans-serif; font-size:1.3rem; min-width:28px; }
+    .lb-rank.g { color:#d4900f; } .lb-rank.s { color:#94a3b8; } .lb-rank.b { color:#c87533; }
+    .lb-avatar { font-size:26px; }
+    .lb-name   { font-family:'Oswald',sans-serif; font-size:1.1rem; flex:1; }
+    .lb-pts    { font-family:'Oswald',sans-serif; font-size:1.5rem; color:var(--green); }
+    .lb-pts-lbl { font-size:.68rem; color:var(--text-muted); text-align:right; }
+    .dog-badge  { font-size:.6rem; background:var(--dog-border); color:#5b21b6; padding:1px 6px; border-radius:10px; font-weight:600; letter-spacing:.04em; }
+
+    .lb-rounds  { display:flex; flex-direction:column; gap:6px; }
+    .lb-round-row { display:flex; align-items:flex-start; gap:8px; }
+    .lb-round-name { font-size:.65rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); width:90px; flex-shrink:0; padding-top:3px; }
+    .lb-indicators  { display:flex; gap:4px; flex-wrap:wrap; }
+
+    /* Human: just icons */
+    .indicator      { width:22px; height:22px; border-radius:4px; font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:600; }
+    .indicator.correct { background:#dcfce7; color:var(--correct); }
+    .indicator.wrong   { background:#fee2e2; color:var(--wrong); }
+    .indicator.pending { background:var(--bg); color:var(--pending); border:1px dashed var(--pending); }
+    .indicator.no-pick { background:var(--bg); color:var(--pending); border:1px dashed var(--pending); }
+
+    /* Dog: show pick text */
+    .dog-pick-chip  { display:flex; align-items:center; gap:4px; padding:2px 8px; border-radius:10px; font-size:.72rem; font-family:'Oswald',sans-serif; background:var(--bg); border:1px solid var(--border); color:var(--text-mid); }
+    .dog-pick-chip.correct { background:#dcfce7; border-color:#86efac; color:var(--correct); }
+    .dog-pick-chip.wrong   { background:#fee2e2; border-color:#fca5a5; color:var(--wrong); opacity:.8; }
+
+    .lb-footer { font-size:.72rem; color:var(--text-muted); text-align:center; margin-top:12px; line-height:1.6; }
+
+    /* ── ADMIN TAB ── */
+    .admin-card        { background:var(--card); border-radius:var(--r); padding:16px; margin-bottom:14px; box-shadow:var(--shadow-sm); }
+    .admin-card-title  { font-family:'Oswald',sans-serif; font-size:1rem; color:var(--text); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .admin-game-row    { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+    .admin-game-row:last-of-type { border-bottom:none; }
+    .admin-game-lbl    { flex:1; font-size:.8rem; color:var(--text-mid); line-height:1.3; }
+    .admin-select      { font-size:.8rem; border:1px solid var(--border); border-radius:var(--r-sm); padding:7px 10px; background:var(--bg); color:var(--text); min-width:150px; }
+    .btn-admin-save    { background:var(--green); color:#fff; border-radius:var(--r-sm); padding:10px 20px; font-size:.85rem; font-weight:500; width:100%; margin-top:12px; transition:background .15s,transform .1s; }
+    .btn-admin-save:hover  { background:var(--green-dark); }
+    .btn-admin-save:active { transform:scale(.99); }
+    .btn-admin-blue    { background:#2563eb; }
+    .btn-admin-blue:hover { background:#1d4ed8; }
+
+    .toggle-row     { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+    .toggle-row:last-of-type { border-bottom:none; }
+    .toggle-lbl     { font-size:.875rem; color:var(--text-mid); }
+    .tog            { position:relative; width:44px; height:24px; display:inline-block; }
+    .tog input      { opacity:0; width:0; height:0; }
+    .tog-slider     { position:absolute; cursor:pointer; inset:0; background:#cbd5e1; border-radius:12px; transition:.2s; }
+    .tog-slider::before { content:''; position:absolute; width:18px; height:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+    input:checked + .tog-slider { background:var(--green); }
+    input:checked + .tog-slider::before { transform:translateX(20px); }
+
+    .admin-user-block { margin-bottom:14px; border-bottom:1px solid var(--border); padding-bottom:12px; }
+    .admin-user-block:last-child { border-bottom:none; padding-bottom:0; }
+    .admin-user-name  { font-family:'Oswald',sans-serif; font-size:.95rem; margin-bottom:5px; }
+    .admin-pick-row   { font-size:.78rem; color:var(--text-mid); margin-top:3px; display:flex; gap:6px; align-items:center; }
+    .admin-pick-ok    { color:var(--correct); font-weight:600; }
+    .admin-pick-bad   { color:var(--wrong); font-weight:600; }
+
+    .sync-info { background:#eff6ff; border:1px solid #bfdbfe; border-radius:var(--r-sm); padding:10px 14px; font-size:.78rem; color:#1e40af; margin-bottom:14px; line-height:1.5; }
+
+    /* ── CONFIRM MODAL ── */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(5px); padding:20px; }
+    .modal-overlay.hidden { display:none; }
+    .modal-box   { background:var(--card); border-radius:20px; padding:28px 24px; max-width:340px; width:100%; text-align:center; animation:popIn .28s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes popIn { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
+    .modal-icon  { font-size:40px; margin-bottom:10px; }
+    .modal-title { font-family:'Oswald',sans-serif; font-size:1.35rem; margin-bottom:8px; }
+    .modal-text  { font-size:.85rem; color:var(--text-muted); margin-bottom:20px; line-height:1.55; }
+    .modal-btns  { display:flex; gap:10px; }
+    .btn-modal-yes { flex:1; background:var(--green); color:#fff; border-radius:var(--r-sm); padding:12px; font-size:.875rem; font-weight:600; transition:background .15s; }
+    .btn-modal-yes:hover { background:var(--green-dark); }
+    .btn-modal-no  { flex:1; background:var(--bg); color:var(--text); border-radius:var(--r-sm); padding:12px; font-size:.875rem; border:1px solid var(--border); }
+    .btn-modal-no:hover { background:var(--border); }
+
+    /* ── TOAST ── */
+    #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); background:#1a2332; color:#fff; padding:10px 22px; border-radius:22px; font-size:.85rem; z-index:3000; transition:transform .32s cubic-bezier(.34,1.56,.64,1); pointer-events:none; white-space:nowrap; }
+    #toast.show { transform:translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="confirm-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <div class="modal-icon">🔒</div>
+    <h3 class="modal-title">Lock In Your Picks?</h3>
+    <p class="modal-text">Once you submit, your picks are <strong>locked forever</strong> and cannot be changed. Are you sure?</p>
+    <div class="modal-btns">
+      <button class="btn-modal-no"  id="modal-no">Cancel</button>
+      <button class="btn-modal-yes" id="modal-yes">Submit! 🏀</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+const USERS = [
+  { id:'nathan',   name:'Nathan',   pin:'0203', avatar:'🏀', role:'Dad',  isAdmin:true  },
+  { id:'melissa',  name:'Melissa',  pin:'0208', avatar:'🌸', role:'Mom',  isAdmin:true  },
+  { id:'caeden',   name:'Caeden',   pin:'0626', avatar:'⚡', role:'',     isAdmin:true  },
+  { id:'mackenna', name:'Mackenna', pin:'0716', avatar:'⭐', role:'',     isAdmin:false },
+  { id:'nolan',    name:'Nolan',    pin:'0621', avatar:'🔥', role:'',     isAdmin:false },
+];
+
+const DOGS = [
+  { id:'cocoa', name:'Cocoa', avatar:'🐕', title:'Senior Analyst' },
+  { id:'theo',  name:'Theo',  avatar:'🐶', title:'Lead Strategist' },
+];
+
+// 2026 NCAA Men's Tournament — actual Sweet 16 matchups
+const BRACKET = {
+  sweet16: [
+    // WEST — SAP Center, San Jose, CA — Thursday March 26
+    { id:'w1', region:'West',    team1:{name:'Purdue',      seed:2 }, team2:{name:'Texas',         seed:11}, date:'Thu Mar 26', time:'7:10 PM CT',  venue:'SAP Center, San Jose, CA'            },
+    { id:'w2', region:'West',    team1:{name:'Arizona',     seed:1 }, team2:{name:'Arkansas',      seed:4 }, date:'Thu Mar 26', time:'9:45 PM CT',  venue:'SAP Center, San Jose, CA'            },
+    // SOUTH — Toyota Center, Houston, TX — Thursday March 26
+    { id:'s1', region:'South',   team1:{name:'Nebraska',    seed:4 }, team2:{name:'Iowa',          seed:9 }, date:'Thu Mar 26', time:'7:30 PM CT',  venue:'Toyota Center, Houston, TX'          },
+    { id:'s2', region:'South',   team1:{name:'Houston',     seed:2 }, team2:{name:'Illinois',      seed:3 }, date:'Thu Mar 26', time:'10:05 PM CT', venue:'Toyota Center, Houston, TX'          },
+    // EAST — Capital One Arena, Washington D.C. — Friday March 27
+    { id:'e1', region:'East',    team1:{name:'Duke',        seed:1 }, team2:{name:"St. John's",    seed:5 }, date:'Fri Mar 27', time:'7:10 PM CT',  venue:'Capital One Arena, Washington D.C.'  },
+    { id:'e2', region:'East',    team1:{name:'UConn',       seed:2 }, team2:{name:'Michigan State',seed:3 }, date:'Fri Mar 27', time:'9:45 PM CT',  venue:'Capital One Arena, Washington D.C.'  },
+    // MIDWEST — United Center, Chicago, IL — Friday March 27
+    { id:'m1', region:'Midwest', team1:{name:'Alabama',     seed:4 }, team2:{name:'Michigan',      seed:1 }, date:'Fri Mar 27', time:'7:35 PM CT',  venue:'United Center, Chicago, IL'          },
+    { id:'m2', region:'Midwest', team1:{name:'Iowa State',  seed:2 }, team2:{name:'Tennessee',     seed:6 }, date:'Fri Mar 27', time:'10:10 PM CT', venue:'United Center, Chicago, IL'          },
+  ],
+  elite8: [
+    { id:'ew1', region:'West',    date:'Sat Mar 28', time:'TBD', venue:'SAP Center, San Jose, CA',            fromGames:['w1','w2'] },
+    { id:'es1', region:'South',   date:'Sat Mar 28', time:'TBD', venue:'Toyota Center, Houston, TX',          fromGames:['s1','s2'] },
+    { id:'ee1', region:'East',    date:'Sun Mar 29', time:'TBD', venue:'Capital One Arena, Washington D.C.',  fromGames:['e1','e2'] },
+    { id:'em1', region:'Midwest', date:'Sun Mar 29', time:'TBD', venue:'United Center, Chicago, IL',          fromGames:['m1','m2'] },
+  ],
+  final4: [
+    { id:'f1', region:'West / South',   date:'Sat Apr 4', time:'TBD', venue:'Lucas Oil Stadium, Indianapolis', fromGames:['ew1','es1'] },
+    { id:'f2', region:'East / Midwest', date:'Sat Apr 4', time:'TBD', venue:'Lucas Oil Stadium, Indianapolis', fromGames:['ee1','em1'] },
+  ],
+  championship: [
+    { id:'c1', region:'Championship', date:'Mon Apr 6', time:'TBD', venue:'Lucas Oil Stadium, Indianapolis', fromGames:['f1','f2'] },
+  ],
+};
+
+const ROUND_LABELS = { sweet16:'Sweet 16', elite8:'Elite 8', final4:'Final Four', championship:'Championship' };
+const ROUND_PTS    = { sweet16:1, elite8:2, final4:3, championship:4 };
+const ROUNDS       = ['sweet16','elite8','final4','championship'];
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let appData     = null;
+let currentUser = null;
+let currentTab  = 'bracket';
+let pinState    = { userId:null, buffer:'' };
+let pending     = {};
+const STORAGE_KEY = 'johnson_bracket_2026_v1';
+
+// ══════════════════════════════════════════════════════════
+// DOG BRACKETS (seeded deterministic — always same picks)
+// ══════════════════════════════════════════════════════════
+function hash(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return h;
+}
+
+function getDogBracket(dogId) {
+  const picks = {};
+  BRACKET.sweet16.forEach(g => {
+    picks[g.id] = hash(dogId+g.id)%2===0 ? g.team1.name : g.team2.name;
+  });
+  ['elite8','final4','championship'].forEach(round => {
+    BRACKET[round].forEach(g => {
+      const t1 = picks[g.fromGames[0]], t2 = picks[g.fromGames[1]];
+      if (t1 && t2) picks[g.id] = hash(dogId+g.id)%2===0 ? t1 : t2;
+    });
+  });
+  return picks;
+}
+
+// ══════════════════════════════════════════════════════════
+// API
+// ══════════════════════════════════════════════════════════
+function defaultData() {
+  return {
+    results:   { sweet16:{}, elite8:{}, final4:{}, championship:{} },
+    picks:     {},
+    submitted: {},
+    roundOpen: { sweet16:true, elite8:false, final4:false, championship:false }
+  };
+}
+
+function fetchData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { appData = JSON.parse(raw); return; }
+  } catch {}
+  if (!appData) appData = defaultData();
+}
+
+function pushData(d) {
+  appData = d;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); } catch(e) { console.warn('save failed', e); }
+}
+
+// ══════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════
+function getTeams(round, game) {
+  if (round === 'sweet16') return { t1:game.team1.name, s1:game.team1.seed, t2:game.team2.name, s2:game.team2.seed };
+  const prev = ROUNDS[ROUNDS.indexOf(round)-1];
+  const r    = appData?.results || {};
+  return { t1:r[prev]?.[game.fromGames[0]] || '?', s1:null, t2:r[prev]?.[game.fromGames[1]] || '?', s2:null };
+}
+
+function getScore(uid) {
+  if (!appData) return 0;
+  let s = 0;
+  ROUNDS.forEach(round => {
+    const rp = appData.picks?.[uid]?.[round] || {};
+    const rr = appData.results?.[round]       || {};
+    Object.entries(rr).forEach(([gid,w]) => { if (rp[gid]===w) s += ROUND_PTS[round]; });
+  });
+  return s;
+}
+
+function getDogScore(dogId) {
+  if (!appData) return 0;
+  const picks = getDogBracket(dogId);
+  let s = 0;
+  ROUNDS.forEach(round => {
+    const rr = appData.results?.[round] || {};
+    Object.entries(rr).forEach(([gid,w]) => { if (picks[gid]===w) s += ROUND_PTS[round]; });
+  });
+  return s;
+}
+
+function getPickStatus(uid, round, gid) {
+  const pick   = appData?.picks?.[uid]?.[round]?.[gid];
+  const result = appData?.results?.[round]?.[gid];
+  if (!pick)   return 'no-pick';
+  if (!result) return 'pending';
+  return pick === result ? 'correct' : 'wrong';
+}
+
+function activeRound() {
+  for (const r of ROUNDS) if (appData?.roundOpen?.[r]) return r;
+  return ROUNDS[ROUNDS.length-1];
+}
+
+function teamClass(teamName, pick, result) {
+  if (pick === teamName) {
+    if (!result) return 'selected';
+    return result === teamName ? 'correct-pick' : 'wrong-pick';
+  }
+  if (result) return result === teamName ? 'winner' : 'loser';
+  return '';
+}
+
+function sponsorFert() {
+  return `<div class="sponsor-card sponsor-fert"><div class="fert-name">Fert-L-Lawn</div><div class="fert-sub">LAWN AND TREE SERVICES</div></div>`;
+}
+function sponsorGlenns() {
+  const sq = [0,1,2,3,4,5,6,7].map(i=>`<span class="check-sq ${i%2===0?'teal':'white'}"></span>`).join('');
+  return `<div class="sponsor-card sponsor-glenns"><div class="glenns-check">${sq}</div><div class="glenns-name">GLENN'S</div><div class="glenns-sub">BODY REPAIR INC.</div></div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER — LOGIN
+// ══════════════════════════════════════════════════════════
+function renderLogin() {
+  const u = pinState.userId ? USERS.find(x=>x.id===pinState.userId) : null;
+  const dots = [0,1,2,3].map(i=>`<span class="${i<pinState.buffer.length?'filled':''}"></span>`).join('');
+  const pad  = [1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(k=>`
+    <button class="pin-key ${k===''?'pin-key-blank':''}"
+      data-action="${k===''?'noop':k==='⌫'?'pin-del':'pin-digit'}" data-digit="${k}">${k}</button>`).join('');
+
+  return `
+  <div class="login-screen">
+    <div class="login-header">
+      <div class="login-logo">🏀</div>
+      <h1 class="login-title">Johnson Family</h1>
+      <h2 class="login-subtitle">March Madness 2026</h2>
+      <p class="login-desc">Sweet 16 Bracket Challenge</p>
+    </div>
+    <div class="profile-grid">
+      ${USERS.map(u=>`
+        <button class="profile-card" data-action="open-pin" data-uid="${u.id}">
+          <div class="profile-avatar">${u.avatar}</div>
+          <div class="profile-name">${u.name}</div>
+          ${u.role?`<div class="profile-role">${u.role}</div>`:''}
+        </button>`).join('')}
+    </div>
+
+    <div class="pin-overlay ${u?'':'hidden'}" id="pin-overlay">
+      <div class="pin-sheet">
+        ${u?`
+          <div class="pin-avatar">${u.avatar}</div>
+          <div class="pin-name">${u.name}</div>
+          <div class="pin-dots" id="pin-dots">${dots}</div>
+          <div class="pin-error" id="pin-error"></div>
+          <div class="pin-pad">${pad}</div>
+          <button class="btn-pin-cancel" data-action="pin-cancel">Cancel</button>
+        `:''}
+      </div>
+    </div>
+
+    <div class="sponsors-section">
+      <p class="sponsors-label">Presented by</p>
+      <div class="sponsors-row">${sponsorFert()}${sponsorGlenns()}</div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER — APP SHELL
+// ══════════════════════════════════════════════════════════
+function renderApp() {
+  const user = USERS.find(u=>u.id===currentUser);
+  const tabs = [
+    { id:'bracket',     label:'🏀 My Bracket' },
+    { id:'leaderboard', label:'📊 Standings'   },
+    ...(user.isAdmin ? [{ id:'admin', label:'⚙️ Admin' }] : []),
+  ];
+  return `
+  <div class="app-screen">
+    <div class="app-header">
+      <div class="app-header-info">
+        <h2>Johnson Family MM 2026</h2>
+        <h1>${user.avatar} ${user.name}</h1>
+      </div>
+      <button data-action="logout" class="btn-logout">Sign Out</button>
+    </div>
+    <div class="tab-bar">
+      ${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" data-action="tab" data-tab="${t.id}">${t.label}</button>`).join('')}
+    </div>
+    <div class="app-content">
+      ${ currentTab==='bracket'     ? renderBracketTab()     : '' }
+      ${ currentTab==='leaderboard' ? renderLeaderboardTab() : '' }
+      ${ currentTab==='admin' && user.isAdmin ? renderAdminTab() : '' }
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER — BRACKET TAB
+// ══════════════════════════════════════════════════════════
+function renderBracketTab() {
+  const round      = activeRound();
+  const label      = ROUND_LABELS[round];
+  const open       = appData?.roundOpen?.[round];
+  const submitted  = appData?.submitted?.[currentUser]?.[round];
+  const savedPicks = appData?.picks?.[currentUser]?.[round] || {};
+  const pend       = pending[round] || {};
+  const games      = BRACKET[round];
+
+  const allPicked = games.every(g => !!(pend[g.id] || savedPicks[g.id]));
+
+  const regions = {};
+  games.forEach(g => { (regions[g.region] = regions[g.region]||[]).push(g); });
+
+  let html = `
+    <div class="round-banner">
+      <div class="round-badge">${label}</div>
+      <div class="round-banner-text">${submitted ? 'Picks locked in ✓' : open ? 'Make your picks below' : 'Waiting for this round to open'}</div>
+      ${submitted ? '<div class="round-done-pill">Submitted ✓</div>' : ''}
+    </div>`;
+
+  if (!open && !submitted) {
+    const prevLabel = ROUNDS.indexOf(round)>0 ? ROUND_LABELS[ROUNDS[ROUNDS.indexOf(round)-1]] : '';
+    html += `<div class="round-waiting"><div class="big">🔒</div><h3>Round Not Open Yet</h3><p>An admin will unlock this round once all ${prevLabel} results are entered.</p></div>`;
+    return html;
+  }
+
+  Object.entries(regions).forEach(([reg, rgames]) => {
+    html += `<div class="region-label">${reg} Region</div>`;
+    rgames.forEach(game => {
+      const {t1,s1,t2,s2} = getTeams(round, game);
+      const pick   = submitted ? savedPicks[game.id] : (pend[game.id] || savedPicks[game.id] || '');
+      const result = appData?.results?.[round]?.[game.id];
+      const c1 = teamClass(t1, pick, result);
+      const c2 = teamClass(t2, pick, result);
+
+      html += `
+        <div class="game-card">
+          <div class="game-meta">
+            <span>${game.date} · ${game.venue}</span>
+            <span>${game.time}</span>
+          </div>
+          <div class="teams-row">
+            <button class="team-btn ${c1}"
+              data-action="${submitted?'noop':'pick'}" data-round="${round}" data-game="${game.id}" data-team="${t1}"
+              ${submitted?'disabled':''}>
+              ${s1?`<div class="team-seed">#${s1}</div>`:''}
+              <div class="team-name">${t1}</div>
+            </button>
+            <div class="vs-lbl">VS</div>
+            <button class="team-btn ${c2}"
+              data-action="${submitted?'noop':'pick'}" data-round="${round}" data-game="${game.id}" data-team="${t2}"
+              ${submitted?'disabled':''}>
+              ${s2?`<div class="team-seed">#${s2}</div>`:''}
+              <div class="team-name">${t2}</div>
+            </button>
+          </div>
+          ${result ? `<div class="game-result-row">Result: <strong>${result}</strong></div>` : ''}
+        </div>`;
+    });
+  });
+
+  if (open && !submitted) {
+    html += `
+      <div class="submit-wrap">
+        <button class="btn-submit" data-action="submit-round" ${!allPicked?'disabled':''}>
+          ${allPicked ? `Lock In My ${label} Picks 🔒` : 'Select All Games to Submit'}
+        </button>
+        ${!allPicked ? `<div class="picks-hint">Pick a winner for every game above</div>` : ''}
+      </div>`;
+  }
+  if (submitted) {
+    html += `<div class="locked-note">Your ${label} picks are locked. Check Standings to see how you're doing!</div>`;
+  }
+  return html;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER — LEADERBOARD (humans + dogs integrated)
+// ══════════════════════════════════════════════════════════
+function renderLeaderboardTab() {
+  // Build combined list of humans and dogs
+  const entries = [
+    ...USERS.map(u => ({ type:'human', id:u.id,    name:u.name,    avatar:u.avatar, score:getScore(u.id)     })),
+    ...DOGS.map(d  => ({ type:'dog',   id:d.id,    name:d.name,    avatar:d.avatar, score:getDogScore(d.id)  })),
+  ].sort((a,b) => b.score - a.score);
+
+  const medals  = ['🥇','🥈','🥉'];
+  const rankCls = ['g','s','b'];
+
+  let html = `<h3 style="font-family:'Oswald',sans-serif;font-size:1.35rem;margin-bottom:14px">Johnson Family Standings</h3>`;
+
+  entries.forEach(({ type, id, name, avatar, score }, i) => {
+    const isDog    = type === 'dog';
+    const isTop    = i === 0;
+    const cardCls  = isDog ? 'dog-card' : isTop ? 'top' : '';
+    const dogPicks = isDog ? getDogBracket(id) : null;
+
+    html += `
+      <div class="lb-card ${cardCls}">
+        <div class="lb-top">
+          <div class="lb-rank ${rankCls[i]||''}">${medals[i]||`#${i+1}`}</div>
+          <div class="lb-avatar">${avatar}</div>
+          <div class="lb-name">
+            ${name}
+            ${isDog ? `<span class="dog-badge">🐾 Dog</span>` : ''}
+          </div>
+          <div>
+            <div class="lb-pts">${score}</div>
+            <div class="lb-pts-lbl">pts</div>
+          </div>
+        </div>
+        <div class="lb-rounds">`;
+
+    ROUNDS.forEach(round => {
+      const games   = BRACKET[round];
+      const results = appData?.results?.[round] || {};
+      const hasRes  = Object.values(results).some(Boolean);
+      if (!hasRes) return;
+
+      html += `<div class="lb-round-row"><div class="lb-round-name">${ROUND_LABELS[round]}</div><div class="lb-indicators">`;
+
+      if (isDog) {
+        // Show actual pick text for dogs
+        games.forEach(g => {
+          const pick   = dogPicks[g.id];
+          const result = results[g.id];
+          const st     = pick && result ? (pick===result?'correct':'wrong') : 'pending';
+          html += `<div class="dog-pick-chip ${st}">${pick||'?'}</div>`;
+        });
+      } else {
+        // Show only correct/wrong icons for humans
+        games.forEach(g => {
+          const st   = getPickStatus(id, round, g.id);
+          const icon = st==='correct'?'✓' : st==='wrong'?'✗' : '·';
+          html += `<div class="indicator ${st}">${icon}</div>`;
+        });
+      }
+
+      html += `</div></div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  html += `
+    <div class="lb-footer">
+      Human picks: ✓ correct · ✗ wrong · · pending (teams hidden)<br>
+      Dog picks: full bracket always visible 🐾
+    </div>`;
+  return html;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER — ADMIN TAB
+// ══════════════════════════════════════════════════════════
+function renderAdminTab() {
+  const d = appData || defaultData();
+
+  const resultsHTML = ROUNDS.map(round => {
+    const games = BRACKET[round];
+    const rows  = games.map(g => {
+      const {t1, t2} = getTeams(round, g);
+      const cur = d.results[round]?.[g.id] || '';
+      return `
+        <div class="admin-game-row">
+          <div class="admin-game-lbl">${g.region} · ${g.date}</div>
+          <select class="admin-select" data-result-round="${round}" data-result-game="${g.id}">
+            <option value="">— No result yet —</option>
+            <option value="${t1}" ${cur===t1?'selected':''}>${t1}</option>
+            <option value="${t2}" ${cur===t2?'selected':''}>${t2}</option>
+          </select>
+        </div>`;
+    }).join('');
+    return `
+      <div class="admin-card">
+        <div class="admin-card-title">📋 ${ROUND_LABELS[round]} Results</div>
+        ${rows}
+        <button class="btn-admin-save" data-action="save-results" data-round="${round}">Save ${ROUND_LABELS[round]} Results</button>
+      </div>`;
+  }).join('');
+
+  const roundToggles = ROUNDS.map(r => `
+    <div class="toggle-row">
+      <span class="toggle-lbl">${ROUND_LABELS[r]} picks open</span>
+      <label class="tog"><input type="checkbox" data-toggle="${r}" ${d.roundOpen[r]?'checked':''}><span class="tog-slider"></span></label>
+    </div>`).join('');
+
+  const allPicksHTML = USERS.map(u => {
+    const anyPick = ROUNDS.some(r => Object.keys(d.picks?.[u.id]?.[r]||{}).length>0);
+    let rows = '';
+    if (anyPick) {
+      ROUNDS.forEach(round => {
+        const rp  = d.picks?.[u.id]?.[round] || {};
+        const sub = d.submitted?.[u.id]?.[round];
+        if (!sub && !Object.keys(rp).length) return;
+        rows += `<div style="font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin:5px 0 2px">${ROUND_LABELS[round]}${sub?' ✓':''}</div>`;
+        BRACKET[round].forEach(g => {
+          const pick = rp[g.id];
+          const res  = d.results[round]?.[g.id];
+          const ok   = pick && res && pick===res;
+          const bad  = pick && res && pick!==res;
+          rows += `<div class="admin-pick-row"><span style="color:var(--text-muted);width:58px;flex-shrink:0">${g.region}:</span><strong>${pick||'—'}</strong>${ok?' <span class="admin-pick-ok">✓</span>':''}${bad?' <span class="admin-pick-bad">✗</span>':''}</div>`;
+        });
+      });
+    } else {
+      rows = `<div style="font-size:.75rem;color:var(--text-muted)">No picks submitted yet</div>`;
+    }
+    return `<div class="admin-user-block"><div class="admin-user-name">${u.avatar} ${u.name}</div>${rows}</div>`;
+  }).join('');
+
+  return `
+    <div class="sync-info">ℹ️ Changes save to the server — all devices update within ~10 seconds automatically.</div>
+    ${resultsHTML}
+    <div class="admin-card">
+      <div class="admin-card-title">🔓 Round Access Control</div>
+      ${roundToggles}
+      <button class="btn-admin-save" data-action="save-rounds">Save Round Settings</button>
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-title">👀 All Family Picks</div>
+      ${allPicksHTML}
+    </div>
+    <div class="admin-card">
+      <div class="admin-card-title">📤 Multi-Device Sync</div>
+      <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:12px">If a device isn't syncing, export state from one device and import on the other.</p>
+      <button class="btn-admin-save" style="margin-bottom:8px" data-action="export">Copy State to Clipboard</button>
+      <button class="btn-admin-save btn-admin-blue" data-action="import">Import State from Clipboard</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// MAIN RENDER
+// ══════════════════════════════════════════════════════════
+function render() {
+  document.getElementById('app').innerHTML = currentUser ? renderApp() : renderLogin();
+}
+
+// ══════════════════════════════════════════════════════════
+// PIN
+// ══════════════════════════════════════════════════════════
+function updateDots() {
+  const el = document.getElementById('pin-dots');
+  if (!el) return;
+  el.querySelectorAll('span').forEach((s,i) => s.classList.toggle('filled', i < pinState.buffer.length));
+}
+
+function checkPin() {
+  const user = USERS.find(u=>u.id===pinState.userId);
+  if (!user) return;
+  if (pinState.buffer === user.pin) {
+    currentUser = user.id;
+    pinState    = { userId:null, buffer:'' };
+    pending     = {};
+    currentTab  = 'bracket';
+    render();
+    toast(`Welcome, ${user.name}! 🏀`);
+  } else {
+    const err = document.getElementById('pin-error');
+    if (err) err.textContent = 'Wrong PIN — try again!';
+    pinState.buffer = '';
+    updateDots();
+    setTimeout(() => { const e = document.getElementById('pin-error'); if (e) e.textContent=''; }, 2000);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// ACTIONS
+// ══════════════════════════════════════════════════════════
+function doSubmitRound() {
+  const round  = activeRound();
+  const merged = { ...(appData?.picks?.[currentUser]?.[round]||{}), ...(pending[round]||{}) };
+  const d = JSON.parse(JSON.stringify(appData));
+  if (!d.picks[currentUser])     d.picks[currentUser]     = {};
+  if (!d.submitted[currentUser]) d.submitted[currentUser] = {};
+  d.picks[currentUser][round]    = merged;
+  d.submitted[currentUser][round]= true;
+  pushData(d);
+  pending[round] = {};
+  render();
+  toast(`${ROUND_LABELS[round]} picks locked! 🔒`);
+}
+
+function doSaveResults(round) {
+  const d = JSON.parse(JSON.stringify(appData));
+  document.querySelectorAll(`[data-result-round="${round}"]`).forEach(sel => {
+    const gid = sel.dataset.resultGame;
+    if (sel.value) d.results[round][gid] = sel.value;
+    else delete d.results[round][gid];
+  });
+  pushData(d);
+  render();
+  toast(`${ROUND_LABELS[round]} results saved!`);
+}
+
+function doSaveRounds() {
+  const d = JSON.parse(JSON.stringify(appData));
+  document.querySelectorAll('[data-toggle]').forEach(t => { d.roundOpen[t.dataset.toggle] = t.checked; });
+  pushData(d);
+  render();
+  toast('Round settings saved!');
+}
+
+// ══════════════════════════════════════════════════════════
+// EVENTS
+// ══════════════════════════════════════════════════════════
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const { action, uid, tab, round, game, team } = btn.dataset;
+
+  switch (action) {
+    case 'open-pin':
+      pinState = { userId:uid, buffer:'' };
+      render(); break;
+    case 'pin-digit':
+      if (pinState.buffer.length < 4) {
+        pinState.buffer += btn.dataset.digit;
+        updateDots();
+        if (pinState.buffer.length === 4) checkPin();
+      } break;
+    case 'pin-del':
+      pinState.buffer = pinState.buffer.slice(0,-1);
+      updateDots();
+      { const e = document.getElementById('pin-error'); if (e) e.textContent=''; }
+      break;
+    case 'pin-cancel':
+      pinState = { userId:null, buffer:'' };
+      render(); break;
+    case 'logout':
+      currentUser = null; currentTab = 'bracket'; pending = {};
+      render(); break;
+    case 'tab':
+      currentTab = tab; render(); break;
+    case 'pick':
+      if (!pending[round]) pending[round] = {};
+      pending[round][game] = team;
+      render(); break;
+    case 'submit-round':
+      document.getElementById('confirm-modal').classList.remove('hidden');
+      break;
+    case 'save-results': doSaveResults(round); break;
+    case 'save-rounds':  doSaveRounds();       break;
+    case 'export':
+      navigator.clipboard.writeText(JSON.stringify(appData, null, 2))
+        .then(()=>toast('State copied!')).catch(()=>toast('Copy failed'));
+      break;
+    case 'import':
+      navigator.clipboard.readText().then(txt => {
+        try {
+          const d = JSON.parse(txt);
+          if (d.results && d.picks) { pushData(d); render(); toast('State imported!'); }
+          else toast('Invalid data');
+        } catch { toast('Could not parse clipboard'); }
+      }).catch(()=>toast('Clipboard read failed'));
+      break;
+    case 'noop': break;
+  }
+});
+
+document.getElementById('modal-yes').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.add('hidden');
+  doSubmitRound();
+});
+document.getElementById('modal-no').addEventListener('click', () => {
+  document.getElementById('confirm-modal').classList.add('hidden');
+});
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+fetchData();
+render();
+</script>
+</body>
+</html>
