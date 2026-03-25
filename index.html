@@ -237,8 +237,8 @@
 // DATA
 // ══════════════════════════════════════════════════════════
 const USERS = [
-  { id:'nathan',   name:'Nathan',   pin:'0203', avatar:'🏀', role:'Dad',  isAdmin:true  },
-  { id:'melissa',  name:'Melissa',  pin:'0208', avatar:'🌸', role:'Mom',  isAdmin:true  },
+  { id:'nathan',   name:'Nathan',   pin:'0203', avatar:'🏀', role:'Dad',  isAdmin:false },
+  { id:'melissa',  name:'Melissa',  pin:'0208', avatar:'🌸', role:'Mom',  isAdmin:false },
   { id:'caeden',   name:'Caeden',   pin:'0626', avatar:'⚡', role:'',     isAdmin:true  },
   { id:'mackenna', name:'Mackenna', pin:'0716', avatar:'⭐', role:'',     isAdmin:false },
   { id:'nolan',    name:'Nolan',    pin:'0621', avatar:'🔥', role:'',     isAdmin:false },
@@ -465,8 +465,9 @@ function renderLogin() {
 function renderApp() {
   const user = USERS.find(u=>u.id===currentUser);
   const tabs = [
-    { id:'bracket',     label:'🏀 My Bracket' },
-    { id:'leaderboard', label:'📊 Standings'   },
+    { id:'bracket',     label:'🏀 My Bracket'    },
+    { id:'leaderboard', label:'📊 Standings'      },
+    { id:'picks',       label:'👀 Everyone\'s Picks' },
     ...(user.isAdmin ? [{ id:'admin', label:'⚙️ Admin' }] : []),
   ];
   return `
@@ -484,6 +485,7 @@ function renderApp() {
     <div class="app-content">
       ${ currentTab==='bracket'     ? renderBracketTab()     : '' }
       ${ currentTab==='leaderboard' ? renderLeaderboardTab() : '' }
+      ${ currentTab==='picks'       ? renderPicksTab()       : '' }
       ${ currentTab==='admin' && user.isAdmin ? renderAdminTab() : '' }
     </div>
   </div>`;
@@ -642,6 +644,62 @@ function renderLeaderboardTab() {
       Human picks: ✓ correct · ✗ wrong · · pending (teams hidden)<br>
       Dog picks: full bracket always visible 🐾
     </div>`;
+  return html;
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER — EVERYONE'S PICKS TAB
+// ══════════════════════════════════════════════════════════
+function renderPicksTab() {
+  const allPlayers = [
+    ...USERS.map(u => ({ type:'human', id:u.id, name:u.name, avatar:u.avatar })),
+    ...DOGS.map(d  => ({ type:'dog',   id:d.id, name:d.name, avatar:d.avatar })),
+  ];
+
+  let html = `<h3 style="font-family:'Oswald',sans-serif;font-size:1.35rem;margin-bottom:14px">Everyone's Picks</h3>`;
+
+  allPlayers.forEach(({ type, id, name, avatar }) => {
+    const isDog    = type === 'dog';
+    const dogPicks = isDog ? getDogBracket(id) : null;
+    let hasAnyPicks = false;
+
+    let cardBody = '';
+    ROUNDS.forEach(round => {
+      const submitted = isDog || appData?.submitted?.[id]?.[round];
+      if (!submitted) return;
+
+      const picks   = isDog ? dogPicks : (appData?.picks?.[id]?.[round] || {});
+      const results = appData?.results?.[round] || {};
+      const games   = BRACKET[round];
+      const hasPick = games.some(g => picks[g.id]);
+      if (!hasPick) return;
+
+      hasAnyPicks = true;
+      cardBody += `<div class="lb-round-row"><div class="lb-round-name">${ROUND_LABELS[round]}</div><div class="lb-indicators">`;
+      games.forEach(g => {
+        const pick = picks[g.id];
+        if (!pick) return;
+        const result = results[g.id];
+        const st = pick && result ? (pick === result ? 'correct' : 'wrong') : 'pending';
+        cardBody += `<div class="dog-pick-chip ${st}">${pick}</div>`;
+      });
+      cardBody += `</div></div>`;
+    });
+
+    if (!hasAnyPicks) {
+      cardBody = `<div style="color:var(--text-muted);font-size:.82rem;padding:4px 0 2px">No picks submitted yet</div>`;
+    }
+
+    html += `
+      <div class="lb-card ${isDog ? 'dog-card' : ''}">
+        <div class="lb-top">
+          <div class="lb-avatar">${avatar}</div>
+          <div class="lb-name">${name}${isDog ? ` <span class="dog-badge">🐾 Dog</span>` : ''}</div>
+        </div>
+        <div class="lb-rounds">${cardBody}</div>
+      </div>`;
+  });
+
   return html;
 }
 
