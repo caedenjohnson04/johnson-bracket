@@ -83,6 +83,12 @@
     .app-header-info h1 { font-family:'Oswald',sans-serif; font-size:1.35rem; color:#fff; line-height:1; }
     .btn-logout  { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); border-radius:20px; padding:6px 14px; color:#fff; font-size:.78rem; transition:background .15s; }
     .btn-logout:hover { background:rgba(255,255,255,.25); }
+    .sync-status { display:flex; align-items:center; gap:5px; font-size:.68rem; color:rgba(255,255,255,.75); }
+    .sync-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .sync-dot.ok      { background:#4ade80; }
+    .sync-dot.error   { background:#f87171; }
+    .sync-dot.loading { background:#fbbf24; animation:pulse .9s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
     .tab-bar  { background:var(--card); display:flex; border-bottom:2px solid var(--border); overflow-x:auto; scrollbar-width:none; }
     .tab-bar::-webkit-scrollbar { display:none; }
@@ -292,6 +298,7 @@ let currentUser = null;
 let currentTab  = 'bracket';
 let pinState    = { userId:null, buffer:'' };
 let pending     = {};
+let syncStatus  = 'loading';
 
 // ══════════════════════════════════════════════════════════
 // DOG BRACKETS (seeded deterministic — always same picks)
@@ -333,21 +340,34 @@ async function fetchData() {
     const r = await fetch('/api/state');
     if (r.ok) {
       const data = await r.json();
-      if (data) { appData = data; return; }
+      if (data) { appData = data; syncStatus = 'ok'; return; }
+      syncStatus = 'ok'; // null means empty state, still connected
+    } else {
+      syncStatus = 'error';
+      console.warn('fetchData HTTP error', r.status);
     }
-  } catch(e) { console.warn('fetch failed', e); }
+  } catch(e) {
+    syncStatus = 'error';
+    console.warn('fetch failed', e);
+  }
   if (!appData) appData = defaultData();
 }
 
 async function pushData(d) {
   appData = d;
   try {
-    await fetch('/api/state', {
+    const r = await fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(d)
     });
-  } catch(e) { console.warn('push failed', e); }
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    syncStatus = 'ok';
+  } catch(e) {
+    syncStatus = 'error';
+    console.warn('push failed', e);
+    toast('⚠️ Sync failed — picks may not have saved');
+  }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -477,7 +497,10 @@ function renderApp() {
         <h2>Johnson Family MM 2026</h2>
         <h1>${user.avatar} ${user.name}</h1>
       </div>
-      <button data-action="logout" class="btn-logout">Sign Out</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <button data-action="logout" class="btn-logout">Sign Out</button>
+        <div class="sync-status"><div class="sync-dot ${syncStatus}"></div>${syncStatus==='ok'?'Synced':syncStatus==='error'?'Sync error':'Connecting…'}</div>
+      </div>
     </div>
     <div class="tab-bar">
       ${tabs.map(t=>`<button class="tab-btn ${currentTab===t.id?'active':''}" data-action="tab" data-tab="${t.id}">${t.label}</button>`).join('')}
