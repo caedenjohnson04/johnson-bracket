@@ -1,6 +1,6 @@
 const KEY = 'johnson_bracket_2026_v1';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const url   = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -31,4 +31,4 @@ export default async function handler(req, res) {
   } else {
     res.status(405).end();
   }
-}
+};
